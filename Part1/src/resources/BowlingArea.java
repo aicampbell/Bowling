@@ -12,6 +12,4 @@ public class BowlingArea {
     public BowlingArea() {
         bowlingAlleys = new ArrayList<>();
     }
-
-
 }
