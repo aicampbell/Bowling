@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Part1/Part1.iml" filepath="$PROJECT_DIR$/Part1/Part1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Part2/Part2.iml" filepath="$PROJECT_DIR$/Part2/Part2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Part3/Part3.iml" filepath="$PROJECT_DIR$/Part3/Part3.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SE-TP3-Bowling.iml" filepath="$PROJECT_DIR$/SE-TP3-Bowling.iml" />
+    </modules>
+  </component>
+</project>
