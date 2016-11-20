@@ -25,9 +25,9 @@ public class BowlingAlley {
         playingClients.add(client);
 
         // If the last expected Client of a Group arrived, all Clients in the Group can start bowling.
-        if(playingClients.size() == client.getGroup().getMaxSize()) {
+        /*if(playingClients.size() == client.getGroup().getMaxSize()) {
             playingClients.forEach(c -> c.bowl());
-        }
+        }*/
 
         // all other clients in the group must start playing as well
         // ...client.bowl() which Thread.sleep(3s) or similar

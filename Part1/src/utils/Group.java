@@ -10,34 +10,24 @@ import java.util.Objects;
  * Created by mo on 17.11.16.
  */
 public class Group {
-    public static int MAX_SIZE = 10;
+    public static int MAX_SIZE = 5;
 
     int id;
     int maxSize;
-
-    List<Client> clients;
+    int numClients;
 
     public Group(int id) {
         this.id = id;
         this.maxSize = MAX_SIZE;
-        clients = new ArrayList<>();
+        numClients = 0;
     }
 
-    public Group(Group group) {
-        this.id = group.getId();
-        this.clients = group.getClients();
-        this.maxSize = group.getMaxSize();
-    }
-
-    public void addClient(Client client) {
-        if (clients.size() < maxSize) {
-            clients.add(client);
-        }
-        // throw exception
+    public void addClient() {
+        numClients++;
     }
 
     public boolean isFull() {
-        return clients.size() == maxSize;
+        return numClients == maxSize;
     }
 
     public int getId() {
@@ -48,8 +38,8 @@ public class Group {
         return maxSize;
     }
 
-    public List<Client> getClients() {
-        return clients;
+    public int getNumClients() {
+        return numClients;
     }
 
     /**

@@ -6,8 +6,6 @@ import utils.Group;
 import java.util.ArrayList;
 import java.util.List;
 
-import static utils.Group.MAX_SIZE;
-
 /**
  * Created by mo on 17.11.16.
  */
@@ -16,35 +14,43 @@ public class RegistrationDesk {
     // Later, when we have multiple cashiers we have to change this.
 
     // whenever a Group is full, add it to this list
-    private List<Group> groups;
+    private List<Group> fullGroups;
     private List<Client> clients;
 
-    private int groupCounter = 0;
+    private int groupCounter = 1;
 
     // only one incomplete group at a time (might be a problem in Part 2 according to Damien
-    private Group incompleteGroup;
+    private Group currentGroup;
 
     public RegistrationDesk() {
-        groups = new ArrayList<>();
+        fullGroups = new ArrayList<>();
         clients = new ArrayList<>();
-        incompleteGroup = new Group(groupCounter);
     }
 
-    public synchronized int register(Client client) {
+    public synchronized Group register(Client client) {
         // registering takes some time...
         client.waitAtRegistrationDesk();
 
+        // Register Clients independently of a Group
         clients.add(client);
-        int groupId = incompleteGroup.getId();
 
-        incompleteGroup.addClient(client);
-        if(incompleteGroup.isFull()) {
-            groups.add(new Group(incompleteGroup));
-            groupCounter++;
-            incompleteGroup = new Group(groupCounter);
+        // Assign Client to a Group
+        return getAssignedGroupForClient();
+    }
+
+    private synchronized Group getAssignedGroupForClient() {
+        if(currentGroup == null || currentGroup.isFull()) {
+            currentGroup = new Group(groupCounter);
         }
 
-        return groupId;
+        currentGroup.addClient();
+
+        if (currentGroup.isFull()) {
+            fullGroups.add(currentGroup);
+            groupCounter++;
+        }
+
+        return currentGroup;
     }
 
     public synchronized void payAndLeave(Client client) {

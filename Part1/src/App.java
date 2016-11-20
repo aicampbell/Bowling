@@ -2,7 +2,7 @@
  * Created by mo on 17.11.16.
  */
 public class App {
-    public static void  main(String[] args) {
+    public static void main(String[] args) {
         App app = new App();
         app.start();
     }
@@ -30,6 +30,5 @@ public class App {
         // Clients return their shoes in ShoesRoom
 
         // Clients goes home / terminates.
-
     }
 }

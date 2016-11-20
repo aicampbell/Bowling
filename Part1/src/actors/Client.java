@@ -8,7 +8,6 @@ import utils.Group;
  */
 public class Client implements Runnable {
     private int id;
-    private int groupId;
     private Group group;
     private ShoePair shoePair;
 
@@ -23,7 +22,7 @@ public class Client implements Runnable {
 
     @Override
     public void run() {
-        groupId = registrationDesk.register(this);
+        group = registrationDesk.register(this);
 
         shoesRoom.giveShoes(this);
 
@@ -32,22 +31,20 @@ public class Client implements Runnable {
     }
 
     public void waitAtRegistrationDesk() {
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-        }
+        chill(1000);
     }
 
     public void waitInShoesRoom() {
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-        }
+        chill(500);
     }
 
     public void bowl() {
+        chill(5000);
+    }
+
+    private void chill(int millis) {
         try {
-            Thread.sleep(5000);
+            Thread.sleep(millis);
         } catch (InterruptedException e) {
         }
     }
@@ -60,16 +57,8 @@ public class Client implements Runnable {
         this.shoePair = null;
     }
 
-    public boolean hasShoes() {
-        return shoePair != null;
-    }
-
     public Group getGroup(){
         return group;
-    }
-
-    public int getGroupId(){
-        return groupId;
     }
 
     public Client setRegistrationDesk(RegistrationDesk registrationDesk) {
