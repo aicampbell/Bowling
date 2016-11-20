@@ -11,8 +11,10 @@ import java.util.*;
 public class ShoesRoom {
     // Right now: Unlimited shoes available.
     // Later: Manage stock of shoes.
+
+    // Associates each Group with the Group's Clients that are waiting already
     private Map<Group, Set<Client>> groupsWaiting;
-    //private Group groupAccess;
+    // Groups registered in this Set are complete and ready to advance.
     private Set<Group> groupsWithAccess;
 
     public ShoesRoom() {
@@ -75,7 +77,10 @@ public class ShoesRoom {
         }
     }
 
-    private Set<Client> getWaitingClientsForGroup(Group group) {
+    /**
+     * Will be synchronized too since the only calling method is already synchronized.
+     */
+    private synchronized Set<Client> getWaitingClientsForGroup(Group group) {
         Set<Client> clientsWaiting = groupsWaiting.get(group);
         return clientsWaiting == null ? new HashSet<>() : clientsWaiting;
     }
@@ -87,6 +92,9 @@ public class ShoesRoom {
         // returning shoes takes some time...
         client.waitInShoesRoom();
 
+        // just sets shoes to null in the Client object.
         client.returnShoes();
+
+        // No need to wait for his whole Group since Group splits after playing
     }
 }
