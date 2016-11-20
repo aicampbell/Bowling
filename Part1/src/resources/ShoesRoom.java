@@ -11,11 +11,13 @@ import java.util.*;
 public class ShoesRoom {
     // Right now: Unlimited shoes available.
     // Later: Manage stock of shoes.
-    private Map<Integer, Set<Client>> waitingGroups;
-    private int groupAccess;
+    private Map<Group, Set<Client>> groupsWaiting;
+    //private Group groupAccess;
+    private Set<Group> groupsWithAccess;
 
     public ShoesRoom() {
-        waitingGroups = new HashMap<>();
+        groupsWaiting = new HashMap<>();
+        groupsWithAccess = new HashSet<>();
     }
 
     /**
@@ -39,34 +41,43 @@ public class ShoesRoom {
      * Synchronized since instance variables are are accessed in this method.
      */
     private synchronized void waitForWholeGroupAndGo(Client client) {
-        Set<Client> clientsForGroup = waitingGroups.get(client.getGroupId());
-        if(clientsForGroup == null) {
-            clientsForGroup = new HashSet<>();
+        Group group = client.getGroup();
+        Set<Client> clientsWaiting = getWaitingClientsForGroup(group);
+
+        // Check if Group is complete with this arriving Client.
+        // If it is, register Client's Group as 'having access' which means all Group members can advance.
+        // All other waiting Clients are woken up and each will check if his/her Group has access
+        // now (see following while()-loop).
+        if (clientsWaiting.size() + 1 == group.getMaxSize()) {
+            groupsWithAccess.add(group);
+            notifyAll();
         }
 
-        // Client cannot advance yet since his Group is incomplete
-        while(client.getGroupId() != groupAccess) {
-            // Group is complete with this arriving Client
-            if(clientsForGroup.size() + 1 == client.getGroup().getMaxSize()) {
-                groupAccess = client.getGroupId();
-                notifyAll();
-            }
-            // Group is yet incomplete. Add client to list of clients who are already waiting.
-            else {
-                // Add client to waiting clients for a Group, if he's not in the Group yet.
-                if(!clientsForGroup.contains(client)) {
-                    clientsForGroup.add(client);
-                    waitingGroups.put(client.getGroupId(), clientsForGroup);
-                }
-                try {
-                    wait();
-                } catch (InterruptedException e) {
-                }
+        // If Client's Group has (still) no access, make sure he's added to the waiting Clients and suspend thread.
+        // If Client's Group has access, its Group is complete and he can advance (leave this while()-loop).
+        while (!groupsWithAccess.contains(group)) {
+            // Add client to waiting clients for a Group, if he's not in the Group yet.
+            // The add() method on a Set will not change the set of the Client is already in the Set.
+            clientsWaiting.add(client);
+            groupsWaiting.put(group, clientsWaiting);
+
+            try {
+                wait();
+            } catch (InterruptedException e) {
             }
         }
-        // When Client-thread left the while-loop, the Client's Group is complete and all its members
-        // can advance to their next common destination.
-        // (leave this method...)
+
+        // Clean data structures accordingly so information that is not required anymore is removed.
+        clientsWaiting.remove(client);
+        if (clientsWaiting.isEmpty()) {
+            groupsWaiting.remove(group);
+            groupsWithAccess.remove(group);
+        }
+    }
+
+    private Set<Client> getWaitingClientsForGroup(Group group) {
+        Set<Client> clientsWaiting = groupsWaiting.get(group);
+        return clientsWaiting == null ? new HashSet<>() : clientsWaiting;
     }
 
     /**

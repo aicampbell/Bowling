@@ -4,6 +4,7 @@ import actors.Client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by mo on 17.11.16.
@@ -49,5 +50,21 @@ public class Group {
 
     public List<Client> getClients() {
         return clients;
+    }
+
+    /**
+     * When comparing Groups with equals(), only the groupId is taken into account.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Group)) return false;
+        Group group = (Group) o;
+        return id == group.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
