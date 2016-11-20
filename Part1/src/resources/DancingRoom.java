@@ -1,5 +1,6 @@
 package resources;
 
+import actors.Client;
 import utils.Group;
 
 import java.util.ArrayList;
@@ -15,10 +16,15 @@ public class DancingRoom {
         dancingGroups = new ArrayList<>();
     }
 
-    public void groupArrives(Group group) {
+    /*public void groupArrives(Group group) {
         dancingGroups.add(group);
 
         // ....
+    }*/
+
+    public void warmUp(Client client) {
+        // mark this client waiting or notify him immediately that alley is free (?)
+        // His whole Group will follow him then.
     }
 
     public void alleyIsFree() {
@@ -26,6 +32,7 @@ public class DancingRoom {
 
         if(!dancingGroups.isEmpty()) {
             Group nextGroup = dancingGroups.get(0);
+            //Client clientInGroup = nextGroup.getAClient();
 
             // group will go to area/alley to play
         }

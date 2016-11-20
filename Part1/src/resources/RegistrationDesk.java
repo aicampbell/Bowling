@@ -30,8 +30,12 @@ public class RegistrationDesk {
         incompleteGroup = new Group(groupCounter);
     }
 
-    public synchronized void register(Client client) {
+    public synchronized int register(Client client) {
+        // registering takes some time...
+        client.waitAtRegistrationDesk();
+
         clients.add(client);
+        int groupId = incompleteGroup.getId();
 
         incompleteGroup.addClient(client);
         if(incompleteGroup.isFull()) {
@@ -39,9 +43,12 @@ public class RegistrationDesk {
             groupCounter++;
             incompleteGroup = new Group(groupCounter);
         }
+
+        return groupId;
     }
 
     public synchronized void payAndLeave(Client client) {
-
+        // paying takes some time...
+        client.waitAtRegistrationDesk();
     }
 }
