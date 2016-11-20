@@ -15,6 +15,7 @@ public class Client implements Runnable {
     private ShoesRoom shoesRoom;
     private DancingRoom dancingRoom;
     private BowlingArea bowlingArea;
+    private BowlingAlley bowlingAlley;
 
     public Client(int id) {
         this.id = id;
@@ -22,12 +23,21 @@ public class Client implements Runnable {
 
     @Override
     public void run() {
-        group = registrationDesk.register(this);
+        registrationDesk.register(this);
 
         shoesRoom.giveShoes(this);
 
         dancingRoom.warmUp(this);
 
+        bowlingArea.requestAlley(this);
+
+        group.getBowlingAlley().play(this);
+
+        bowlingArea.gameEnded(this);
+
+        registrationDesk.pay(this);
+
+        shoesRoom.returnShoes(this);
     }
 
     public void waitAtRegistrationDesk() {
@@ -57,8 +67,12 @@ public class Client implements Runnable {
         this.shoePair = null;
     }
 
-    public Group getGroup(){
+    public Group getGroup() {
         return group;
+    }
+
+    public void setGroup(Group group) {
+        this.group = group;
     }
 
     public Client setRegistrationDesk(RegistrationDesk registrationDesk) {
@@ -79,5 +93,14 @@ public class Client implements Runnable {
     public Client setBowlingArea(BowlingArea bowlingArea) {
         this.bowlingArea = bowlingArea;
         return this;
+    }
+
+    public Client setBowlingAlley(BowlingAlley bowlingAlley) {
+        this.bowlingAlley = bowlingAlley;
+        return this;
+    }
+
+    public BowlingAlley getBowlingAlley() {
+        return bowlingAlley;
     }
 }

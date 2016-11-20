@@ -1,9 +1,7 @@
 package utils;
 
-import actors.Client;
+import resources.BowlingAlley;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -15,6 +13,8 @@ public class Group {
     int id;
     int maxSize;
     int numClients;
+
+    BowlingAlley bowlingAlley;
 
     public Group(int id) {
         this.id = id;
@@ -30,16 +30,20 @@ public class Group {
         return numClients == maxSize;
     }
 
-    public int getId() {
-        return id;
-    }
-
     public int getMaxSize() {
         return maxSize;
     }
 
-    public int getNumClients() {
-        return numClients;
+    public BowlingAlley getBowlingAlley() {
+        return bowlingAlley;
+    }
+
+    public void setBowlingAlley(BowlingAlley bowlingAlley) {
+        this.bowlingAlley = bowlingAlley;
+    }
+
+    public boolean hasAlleyAssigned() {
+        return bowlingAlley != null;
     }
 
     /**

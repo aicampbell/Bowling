@@ -27,19 +27,30 @@ public class RegistrationDesk {
         clients = new ArrayList<>();
     }
 
-    public synchronized Group register(Client client) {
+    public synchronized void register(Client client) {
         // registering takes some time...
         client.waitAtRegistrationDesk();
 
         // Register Clients independently of a Group
         clients.add(client);
 
-        // Assign Client to a Group
-        return getAssignedGroupForClient();
+        // Assign Client to a Group and let Client know about his Group
+        Group group = getAssignedGroupForClient();
+        client.setGroup(group);
+
+        // When Group is full, notify all Group members that they can advance.
+        if (group.isFull()) {
+            notifyAll();
+        } else {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+            }
+        }
     }
 
     private synchronized Group getAssignedGroupForClient() {
-        if(currentGroup == null || currentGroup.isFull()) {
+        if (currentGroup == null || currentGroup.isFull()) {
             currentGroup = new Group(groupCounter);
         }
 
@@ -53,7 +64,7 @@ public class RegistrationDesk {
         return currentGroup;
     }
 
-    public synchronized void payAndLeave(Client client) {
+    public synchronized void pay(Client client) {
         // paying takes some time...
         client.waitAtRegistrationDesk();
     }

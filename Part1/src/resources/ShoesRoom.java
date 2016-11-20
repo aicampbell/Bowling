@@ -3,7 +3,10 @@ package resources;
 import actors.Client;
 import utils.Group;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by mo on 17.11.16.
@@ -36,13 +39,13 @@ public class ShoesRoom {
         // Check if Client's Group is complete now.
         // If not, wait for the remaining Clients for that Group.
         // If yes, go on with the whole group
-        waitForWholeGroupAndGo(client);
+        waitForWholeGroup(client);
     }
 
     /**
      * Synchronized since instance variables are are accessed in this method.
      */
-    private synchronized void waitForWholeGroupAndGo(Client client) {
+    private synchronized void waitForWholeGroup(Client client) {
         Group group = client.getGroup();
         Set<Client> clientsWaiting = getWaitingClientsForGroup(group);
 
