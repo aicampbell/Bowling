@@ -6,11 +6,16 @@ import actors.Client;
  * Created by mo on 17.11.16.
  */
 public class BowlingAlley {
+    private int id;
     private int clientsReadyToPlay;
+
+    private BowlingArea bowlingArea;
 
     private boolean isFree;
 
-    public BowlingAlley() {
+    public BowlingAlley(int id, BowlingArea bowlingArea) {
+        this.id = id;
+        this.bowlingArea = bowlingArea;
     }
 
     public synchronized void play(Client client) {
@@ -38,6 +43,7 @@ public class BowlingAlley {
     public synchronized void gameEnded(Client client) {
         if (!isFree) {
             isFree = true;
+            bowlingArea.gameEnded(this);
         }
     }
 }

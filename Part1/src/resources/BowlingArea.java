@@ -1,11 +1,6 @@
 package resources;
 
-import actors.Client;
-import utils.Group;
-
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -14,52 +9,46 @@ import java.util.Set;
 public class BowlingArea {
     private static int NUM_ALLEYS = 3;
 
+    // need reference to the DancingRoom to inform him that BowlingAlley is free'd up after Group finished playing.
+    DancingRoom dancingRoom;
+
+    // Semaphore (init NUM_ALLEYS) feels suitable here. But probably not needed.
     Set<BowlingAlley> availableAlleys;
-    Map<BowlingAlley, Group> bowlingAlleys;
-    Set<Group> playingGroups;
+    Set<BowlingAlley> occupiedAlleys;
 
     /**
-     * Construct BowlingArea with 3 BowlingAlleys.
+     * Construct BowlingArea with NUM_ALLEYS BowlingAlleys.
      */
-    public BowlingArea() {
+    public BowlingArea(DancingRoom dancingRoom) {
+        this.dancingRoom = dancingRoom;
+
         availableAlleys = new HashSet<>();
-        bowlingAlleys = new HashMap<>();
+        occupiedAlleys = new HashSet<>();
+
         for (int i = 0; i < NUM_ALLEYS; i++) {
-            bowlingAlleys.put(new BowlingAlley(), null);
+            availableAlleys.add(new BowlingAlley(i, this));
         }
     }
 
-    public synchronized void requestAlley(Client client) {
-        Group group = client.getGroup();
-
-        if (!group.hasAlleyAssigned()) {
-            return;
-        }
-
-        while (getFreeBowlingAlley() == null) { // TODO: Or IF?
-            try {
-                wait();
-            } catch (InterruptedException e) {
-            }
-        }
-
-        BowlingAlley freeAlley = getFreeBowlingAlley();
-        group.setBowlingAlley(freeAlley);
-    }
-
-    private BowlingAlley getFreeBowlingAlley() {
+    // Return a free BowlingAlley if there is one. Otherwise return null;
+    public BowlingAlley getFreeAlley() {
         if (availableAlleys.isEmpty()) {
             return null;
         }
-        // Return any free BowlingAlley
-        return availableAlleys.iterator().next();
+
+        BowlingAlley freeAlley = availableAlleys.iterator().next();
+        availableAlleys.remove(freeAlley);
+        occupiedAlleys.add(freeAlley);
+
+        return freeAlley;
     }
 
-    public synchronized void gameEnded(Client client) {
-        if (bowlingAlleys.get(client.getBowlingAlley()) != null) {
-            bowlingAlleys.put(client.getBowlingAlley(), null);
-            playingGroups.remove(client.getGroup());
-            notify();
-        }
+    // Notification of a BowlingAlley that a Group just finished playing on it.
+    public synchronized void gameEnded(BowlingAlley releasedAlley) {
+        occupiedAlleys.remove(releasedAlley);
+        availableAlleys.add(releasedAlley);
+
+        // Notify DancingRoom that game ended. no need for synchronization because DancingRoom is not a thread
+        dancingRoom.gameEnded();
     }
 }

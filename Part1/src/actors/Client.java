@@ -29,11 +29,15 @@ public class Client implements Runnable {
 
         dancingRoom.warmUp(this);
 
-        bowlingArea.requestAlley(this);
+        BowlingAlley alley = dancingRoom.requestAlley(this);
 
-        group.getBowlingAlley().play(this);
+        alley.play(this);
 
-        bowlingArea.gameEnded(this);
+        //group.getBowlingAlley().play(this);
+
+        // OPTIONAL
+        // Remove Group assignment. For the remaining steps, a Client acts as individual.
+        setGroup(null);
 
         registrationDesk.pay(this);
 

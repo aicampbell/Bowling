@@ -51,7 +51,7 @@ public class ShoesRoom {
 
         // Check if Group is complete with this arriving Client.
         // If it is, register Client's Group as 'having access' which means all Group members can advance.
-        // All other waiting Clients are woken up and each will check if his/her Group has access
+        // All other waiting Clients are woken up (notifyAll) and each will check if his/her Group has access
         // now (see following while()-loop).
         if (clientsWaiting.size() + 1 == group.getMaxSize()) {
             groupsWithAccess.add(group);

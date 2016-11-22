@@ -16,9 +16,13 @@ public class DancingRoom {
     // Groups registered in this Set are complete and ready to advance.
     private Set<Group> groupsWithAccess;
 
+    private BowlingArea bowlingArea;
+
     public DancingRoom() {
         dancingGroups = new ArrayList<>();
         groupsWaiting = new HashMap<>();
+
+        bowlingArea = new BowlingArea(this);
     }
 
     /*public void groupArrives(Group group) {
@@ -28,21 +32,38 @@ public class DancingRoom {
     }*/
 
     public void warmUp(Client client) {
+        // dance
+
         //waitForWholeGroup(client);
-
-
-        // mark this client waiting or notify him immediately that alley is free (?)
-        // His whole Group will follow him then.
     }
 
-    public void alleyIsFree() {
-        // when notify arrives from BowlingArea
+    public synchronized BowlingAlley requestAlley(Client client) {
+        // put in wait if no alley is free
 
-        if(!dancingGroups.isEmpty()) {
-            Group nextGroup = dancingGroups.get(0);
-            //Client clientInGroup = nextGroup.getAClient();
-
-            // group will go to area/alley to play
+        while (/*group has not alley yet*/ && bowlingArea.getFreeAlley(client) == null) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+            }
         }
+
+        return bowlingArea.getAlley(client.getGroup());
+
+        // TODO continue here, in this line
+
+        // give access to first Client who request free bowling alley
+        // for other Clients in his group: give assigned alley
+        // for other Clients in other Groups: put in wait again.
+        return null;
+    }
+
+    /*public void alleyIsFree() {
+        // when notify arrives from BowlingArea
+        // notifyAll() ... notify all waiting groups
+    }*/
+
+    public synchronized void gameEnded() {
+        notifyAll();
+        // notify dancing room
     }
 }

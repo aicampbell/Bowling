@@ -67,5 +67,7 @@ public class RegistrationDesk {
     public synchronized void pay(Client client) {
         // paying takes some time...
         client.waitAtRegistrationDesk();
+
+        // remove Client from client-List.
     }
 }
