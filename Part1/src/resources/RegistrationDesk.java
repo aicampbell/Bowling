@@ -68,6 +68,7 @@ public class RegistrationDesk {
         // paying takes some time...
         client.waitAtRegistrationDesk();
 
-        // remove Client from client-List.
+        /** OPTIONAL: remove Client from {@code clients} */
+        clients.remove(client);
     }
 }

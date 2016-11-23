@@ -1,5 +1,7 @@
 package resources;
 
+import utils.Group;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,11 +32,17 @@ public class BowlingArea {
         }
     }
 
-    // Return a free BowlingAlley if there is one. Otherwise return null;
-    public BowlingAlley getFreeAlley() {
-        if (availableAlleys.isEmpty()) {
-            return null;
-        }
+    /**
+     * Must be synchronized because up to NUM_ALLEYS Clients may want to register for a BowlingAlley
+     * to the same time. Since this method modifies variables, only one Client can enter this method
+     * at any given time.
+     *
+     * @return free BowlingAlley that requester's Group can play on
+     */
+    public synchronized BowlingAlley getFreeAlley() {
+        // When calling getFreeAlley(), it is assumed that a free alley exists. The caller (DanceRoom) must check
+        // for a free alley with method BowlingArea.isAlleyFree().
+        assert !availableAlleys.isEmpty();
 
         BowlingAlley freeAlley = availableAlleys.iterator().next();
         availableAlleys.remove(freeAlley);
@@ -43,12 +51,33 @@ public class BowlingArea {
         return freeAlley;
     }
 
+    /**
+     * The only calling method (in DanceRoom) is synchronized itself. An explicit
+     * {@code synchronized} keywords is therefore not needed here. However we still
+     * add it to increase the readability of the proposed solution. If there was
+     * another caller or the calling-method was not synchronized, we would have to
+     * insert a {@code synchronized} here.
+     *
+     * @return
+     */
+    public synchronized boolean isAlleyFree() {
+        return !availableAlleys.isEmpty();
+    }
+
+    /**
+     * Here we need a synchronized. The only calling method is already synchronized, however
+     * it can be called from different instances of BowlingAlley. Therefore we need to guarantee
+     * here that shared variables {@code occupiedAlleys} and {@code availableAlleys} are modified
+     * by only one Thread at a time.
+     *
+     * @param releasedAlley the BowlingAlley object on which a game just ended
+     */
     // Notification of a BowlingAlley that a Group just finished playing on it.
     public synchronized void gameEnded(BowlingAlley releasedAlley) {
         occupiedAlleys.remove(releasedAlley);
         availableAlleys.add(releasedAlley);
 
-        // Notify DancingRoom that game ended. no need for synchronization because DancingRoom is not a thread
+        // Notify DancingRoom that game ended.
         dancingRoom.gameEnded();
     }
 }

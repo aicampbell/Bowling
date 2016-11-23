@@ -2,68 +2,49 @@ package resources;
 
 import actors.Client;
 import utils.Group;
-
-import java.util.*;
+import utils.GroupSynchronizer;
 
 /**
  * Created by mo on 17.11.16.
  */
-public class DancingRoom {
-    List<Group> dancingGroups;
-
-    // Associates each Group with the Group's Clients that are waiting already
-    private Map<Group, Set<Client>> groupsWaiting;
-    // Groups registered in this Set are complete and ready to advance.
-    private Set<Group> groupsWithAccess;
-
+public class DancingRoom extends GroupSynchronizer {
     private BowlingArea bowlingArea;
 
     public DancingRoom() {
-        dancingGroups = new ArrayList<>();
-        groupsWaiting = new HashMap<>();
-
+        super();
         bowlingArea = new BowlingArea(this);
     }
 
-    /*public void groupArrives(Group group) {
-        dancingGroups.add(group);
-
-        // ....
-    }*/
-
-    public void warmUp(Client client) {
+    public synchronized BowlingAlley danceAndRequestAlley(Client client) {
         // dance
+        super.waitForWholeGroup(client);
 
-        //waitForWholeGroup(client);
-    }
+        Group group = client.getGroup();
 
-    public synchronized BowlingAlley requestAlley(Client client) {
-        // put in wait if no alley is free
-
-        while (/*group has not alley yet*/ && bowlingArea.getFreeAlley(client) == null) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
+        /**
+         * If Client's Group already has a BowlingAlley assigned, skip the while() and return the BowlingAlley.
+         * If there is no BowlingAlley assigned, we first check if there is a BowlingAlley free. If not we wait.
+         * If there is a BowlingAlley free, we reserve that for the Group and return it.
+         * When a game ended (see below), all waiting threads are woken up and one Client will take the
+         * lock of this method. This one will book the BowlingAlley that just free'd up for his Group. All other
+         * Clients in his Group that are woken up, will eventually get the lock too and see in the while() that
+         * a BowlingAlley has already booked for their team. With that they won't re-request a BowlingAlley.
+         */
+        while (!group.hasAlleyAssigned()) {
+            if (!bowlingArea.isAlleyFree()) {
+                try {
+                    wait(); // dance even more
+                } catch (InterruptedException e) {
+                }
+            } else {
+                BowlingAlley freeAlley = bowlingArea.getFreeAlley();
+                group.setBowlingAlley(freeAlley);
             }
         }
-
-        return bowlingArea.getAlley(client.getGroup());
-
-        // TODO continue here, in this line
-
-        // give access to first Client who request free bowling alley
-        // for other Clients in his group: give assigned alley
-        // for other Clients in other Groups: put in wait again.
-        return null;
+        return group.getBowlingAlley();
     }
-
-    /*public void alleyIsFree() {
-        // when notify arrives from BowlingArea
-        // notifyAll() ... notify all waiting groups
-    }*/
 
     public synchronized void gameEnded() {
         notifyAll();
-        // notify dancing room
     }
 }

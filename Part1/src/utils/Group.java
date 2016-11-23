@@ -2,19 +2,17 @@ package utils;
 
 import resources.BowlingAlley;
 
-import java.util.Objects;
 
 /**
- * Created by mo on 17.11.16.
+ * A Group has to be treated as Monitor because it its instances are shared among up to MAX_SIZE Clients.
  */
 public class Group {
-    public static int MAX_SIZE = 5;
+    private static int MAX_SIZE = 5;
 
-    int id;
-    int maxSize;
-    int numClients;
-
-    BowlingAlley bowlingAlley;
+    private int id;
+    private int maxSize;
+    private int numClients;
+    private BowlingAlley bowlingAlley;
 
     public Group(int id) {
         this.id = id;
@@ -22,43 +20,35 @@ public class Group {
         numClients = 0;
     }
 
-    public void addClient() {
+    public synchronized void addClient() {
         numClients++;
     }
 
-    public boolean isFull() {
+    public synchronized boolean isFull() {
         return numClients == maxSize;
     }
 
-    public int getMaxSize() {
+    public synchronized int getMaxSize() {
         return maxSize;
     }
 
-    public BowlingAlley getBowlingAlley() {
+    public synchronized BowlingAlley getBowlingAlley() {
         return bowlingAlley;
     }
 
-    public void setBowlingAlley(BowlingAlley bowlingAlley) {
+    public synchronized void setBowlingAlley(BowlingAlley bowlingAlley) {
         this.bowlingAlley = bowlingAlley;
     }
 
-    public boolean hasAlleyAssigned() {
-        return bowlingAlley != null;
-    }
-
     /**
-     * When comparing Groups with equals(), only the groupId is taken into account.
+     * In the other code we make sure that this method is only called once per Group object.
+     * So a synchronized is not really needed here. But we program defensively so we put it.
      */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Group)) return false;
-        Group group = (Group) o;
-        return id == group.id;
+    public synchronized void forgetBowlingAlley() {
+        bowlingAlley = null;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
+    public synchronized boolean hasAlleyAssigned() {
+        return bowlingAlley != null;
     }
 }

@@ -14,8 +14,6 @@ public class Client implements Runnable {
     private RegistrationDesk registrationDesk;
     private ShoesRoom shoesRoom;
     private DancingRoom dancingRoom;
-    private BowlingArea bowlingArea;
-    private BowlingAlley bowlingAlley;
 
     public Client(int id) {
         this.id = id;
@@ -27,21 +25,21 @@ public class Client implements Runnable {
 
         shoesRoom.giveShoes(this);
 
-        dancingRoom.warmUp(this);
-
-        BowlingAlley alley = dancingRoom.requestAlley(this);
-
+        BowlingAlley alley = dancingRoom.danceAndRequestAlley(this);
+        alley.waitAtAlleyForGroup(this);
         alley.play(this);
 
-        //group.getBowlingAlley().play(this);
-
-        // OPTIONAL
-        // Remove Group assignment. For the remaining steps, a Client acts as individual.
-        setGroup(null);
+        /**
+         * Forget notion of Group. From now on every Client acts as an individual and doesn't sync with
+         * other Group members anymore.
+         */
+        forgetAboutGroup();
 
         registrationDesk.pay(this);
 
         shoesRoom.returnShoes(this);
+
+        // Client goes home...
     }
 
     public void waitAtRegistrationDesk() {
@@ -79,6 +77,10 @@ public class Client implements Runnable {
         this.group = group;
     }
 
+    public void forgetAboutGroup() {
+        this.group = null;
+    }
+
     public Client setRegistrationDesk(RegistrationDesk registrationDesk) {
         this.registrationDesk = registrationDesk;
         return this;
@@ -92,19 +94,5 @@ public class Client implements Runnable {
     public Client setDancingRoom(DancingRoom dancingRoom) {
         this.dancingRoom = dancingRoom;
         return this;
-    }
-
-    public Client setBowlingArea(BowlingArea bowlingArea) {
-        this.bowlingArea = bowlingArea;
-        return this;
-    }
-
-    public Client setBowlingAlley(BowlingAlley bowlingAlley) {
-        this.bowlingAlley = bowlingAlley;
-        return this;
-    }
-
-    public BowlingAlley getBowlingAlley() {
-        return bowlingAlley;
     }
 }
