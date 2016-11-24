@@ -1,5 +1,6 @@
 /**
- * Created by mo on 17.11.16.
+ * This class provides only the seperated main()-method in which the bowling
+ * simulation is started.
  */
 public class App {
     public static void main(String[] args) {

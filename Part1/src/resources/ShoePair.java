@@ -1,7 +1,8 @@
 package resources;
 
 /**
- * Created by mo on 20.11.16.
+ * This class is a dummy class which's instances represent ShoesPairs borrowed and
+ * returned by Clients.
  */
 public class ShoePair {
 }

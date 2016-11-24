@@ -3,13 +3,20 @@ package resources;
 import actors.Client;
 import utils.Group;
 
+
 /**
- * Created by mo on 17.11.16.
+ * BowlingAlley can be assigned to one Group at a time that will then play on it.
+ *
+ * It is managed by an instance of {@link BowlingArea}.
  */
 public class BowlingAlley {
+    /** Id of a BowlingAlley. */
     private int id;
+
+    /** Number of Clients waiting at this BowlingAlley. */
     private int clientsReadyToPlay;
 
+    /** Instance of BowlingArea which manages all BowlingAlleys. */
     private BowlingArea bowlingArea;
 
     public BowlingAlley(int id, BowlingArea bowlingArea) {
@@ -18,9 +25,14 @@ public class BowlingAlley {
     }
 
     /**
-     * We don't need to make use of GroupSynchronizer because for a BowlingAlley not more than
-     * one Group can be assigned to at any point of time. There we don't need to keep track of
-     * waiting Clients per Group but just can count the waiting Clients at this BowlingAlley.
+     * Although a BowlingAlley is only meant for one Group, we need to eliminate the possibility that
+     * multiple Clients of this one Group enter this method to the same time. Therefore we need to
+     * put {@code synchronized} because instance variables are shared in this method.
+     *
+     * We don't need to make use of {@link utils.GroupSynchronizer} because for a BowlingAlley
+     * not more than one Group can be assigned to at any point of time. There we don't need
+     * to keep track of waiting Clients per Group but just can count the waiting Clients at
+     * this BowlingAlley.
      *
      * @param client every Client will call this method and will wait for other Clients in his Group
      *               if it isn't complete yet.
@@ -50,7 +62,7 @@ public class BowlingAlley {
     public void play(Client client) {
         System.out.println("Client(" + client.getId() + ") in Group(" + client.getGroup().getId() + ") is bowling now on BowlingAlley(" + id + ")!");
 
-        // Clients play
+        /** Client plays the bowling match of his life... */
         client.bowl();
 
         gameEnded(client);
@@ -60,9 +72,14 @@ public class BowlingAlley {
      * Here we make sure that only one Client (as asked in the exercise) reports to the
      * BowlingArea a new BowlingAlley is free now (= game has ended).
      *
+     * With it's current implementation a {@code synchronized} is needed because we need
+     * to make sure that a first Client releases the BowlingAlley followed by a natification
+     * for the BowlingArea. All other Clients must skip the if-Block, so they don't re-notify
+     * the BowlingArea. In oder to make this work, the whole method can only be entered by
+     * one Client at a time.
+     *
      * @param client Every Client of a Group enters this method
      */
-    // TODO: Maybe performance gains when this method is not synchronized. We can however only remove synchronized if we don't work on shared variables. For this a BowlingAlley must be registered to a Client, not to a Group.
     public synchronized void gameEnded(Client client) {
         Group group = client.getGroup();
         if(group.getBowlingAlley() != null) {
@@ -73,6 +90,12 @@ public class BowlingAlley {
         }
     }
 
+    /**
+     * Is called from inside a already {@code synchronized} method. For visibility we put
+     * the keyword here too though.
+     *
+     * @return the Id of the BowlingAlley
+     */
     public synchronized int getId() {
         return id;
     }

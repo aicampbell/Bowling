@@ -9,18 +9,28 @@ import java.util.Set;
  * object of a BowlingAlley.
  */
 public class BowlingArea {
+    /** Total number of BowlingAlleys the BowlingArea consists of. */
     private static int NUM_ALLEYS = 3;
 
-    // need reference to the DancingRoom to inform him that BowlingAlley is free'd up after Group finished playing.
+    /**
+     * Reference to the DancingRoom to inform him that BowlingAlley is free'd up after
+     * a Group finished playing.
+     */
     DancingRoom dancingRoom;
 
-    // Semaphore (init NUM_ALLEYS) feels suitable here. But probably not needed.
+    /**
+     * These two sets keep track of the available and occupiedAlleys. Note that
+     * {@code availableAlleys.size() + occupiedAlleys.size() == NUM_ALLEYS} is
+     * always true.
+     *
+     * A 'counting semaphore' may be used instead (not tested, just an idea)
+     * but our implementation keeps track of available and occupied BowlingAlleys
+     * via these two sets.
+     */
     Set<BowlingAlley> availableAlleys;
     Set<BowlingAlley> occupiedAlleys;
 
-    /**
-     * Construct BowlingArea with NUM_ALLEYS BowlingAlleys.
-     */
+    /** Construct BowlingArea with NUM_ALLEYS BowlingAlleys. */
     public BowlingArea(DancingRoom dancingRoom) {
         this.dancingRoom = dancingRoom;
 
@@ -33,15 +43,17 @@ public class BowlingArea {
     }
 
     /**
-     * Must be synchronized because up to NUM_ALLEYS Clients may want to register for a BowlingAlley
+     * Must be {@code synchronized} because up to NUM_ALLEYS Clients may want to register for a BowlingAlley
      * to the same time. Since this method modifies variables, only one Client can enter this method
      * at any given time.
      *
-     * @return free BowlingAlley that requester's Group can play on
+     * @return free BowlingAlley on which Client's Group can play on
      */
     public synchronized BowlingAlley getFreeAlley() {
-        // When calling getFreeAlley(), it is assumed that a free alley exists. The caller (DanceRoom) must check
-        // for a free alley with method BowlingArea.isAlleyFree().
+        /**
+         * When calling getFreeAlley(), it is assumed that a free alley exists. The
+         * caller (DanceRoom) must check for a free alley with method BowlingArea.isAlleyFree().
+         */
         assert !availableAlleys.isEmpty();
 
         BowlingAlley freeAlley = availableAlleys.iterator().next();
@@ -67,21 +79,20 @@ public class BowlingArea {
     }
 
     /**
-     * Here we need a synchronized. The only calling method is already synchronized, however
-     * it can be called from different instances of BowlingAlley. Therefore we need to guarantee
-     * here that shared variables {@code occupiedAlleys} and {@code availableAlleys} are modified
-     * by only one Thread at a time.
+     * Here we need a {@code synchronized}. The only calling method is already {@code synchronized},
+     * however it can be called from _different instances_ of BowlingAlley. Therefore we need
+     * to guarantee here that shared variables {@code occupiedAlleys} and {@code availableAlleys}
+     * are modified by only one Thread at a time.
      *
      * @param releasedAlley the BowlingAlley object on which a game just ended
      */
-    // Notification of a BowlingAlley that a Group just finished playing on it.
     public synchronized void gameEnded(BowlingAlley releasedAlley) {
         occupiedAlleys.remove(releasedAlley);
         availableAlleys.add(releasedAlley);
 
         System.out.println("(BowlingArea): A bowling game ended. Available BowlingAlleys now: " + availableAlleys.size() + "/" + NUM_ALLEYS);
 
-        // Notify DancingRoom that game ended.
+        /** Notify DancingRoom that game has ended. */
         dancingRoom.gameEnded();
     }
 }
