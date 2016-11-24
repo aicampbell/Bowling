@@ -21,6 +21,8 @@ public class Client implements Runnable {
 
     @Override
     public void run() {
+        randomArrivalDelay();
+
         registrationDesk.register(this);
 
         shoesRoom.giveShoes(this);
@@ -52,6 +54,11 @@ public class Client implements Runnable {
 
     public void bowl() {
         chill(5000);
+    }
+
+    private void randomArrivalDelay() {
+        int randomDelay = (int)(100000 * Math.random());
+        chill(randomDelay);
     }
 
     private void chill(int millis) {

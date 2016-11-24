@@ -2,7 +2,6 @@ package utils;
 
 import resources.BowlingAlley;
 
-
 /**
  * A Group has to be treated as Monitor because it its instances are shared among up to MAX_SIZE Clients.
  */

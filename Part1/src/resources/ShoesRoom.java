@@ -1,13 +1,7 @@
 package resources;
 
 import actors.Client;
-import utils.Group;
 import utils.GroupSynchronizer;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by mo on 17.11.16.
@@ -37,6 +31,7 @@ public class ShoesRoom extends GroupSynchronizer {
         // If yes, go on with the whole group
         super.waitForWholeGroup(client);
     }
+
     /**
      * Not synchronized since instance variables are not touched (so far).
      */
