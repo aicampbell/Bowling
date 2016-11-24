@@ -10,7 +10,7 @@ import java.util.List;
  * Created by mo on 24.11.16.
  */
 public class BowlingSimulation {
-    private static int NUM_CLIENTS = 5;
+    private static int NUM_CLIENTS = 50;
 
     private RegistrationDesk registrationDesk;
     private ShoesRoom shoesRoom;
@@ -37,7 +37,7 @@ public class BowlingSimulation {
     }
 
     public void start() {
-        System.out.println("Bowling simulation started");
+        System.out.println("Bowling simulation started.\n---------------------------");
 
         // start Client threads
         clientThreads.forEach(t -> t.start());
@@ -50,6 +50,6 @@ public class BowlingSimulation {
             }
         });
 
-        System.out.println("Bowling simulation ended.");
+        System.out.println("-------------------------\nBowling simulation ended.");
     }
 }

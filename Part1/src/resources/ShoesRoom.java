@@ -19,6 +19,7 @@ public class ShoesRoom extends GroupSynchronizer {
      * to waitForWholeGroup(Client) is synchronized.
      */
     public void giveShoes(Client client) {
+        System.out.println("Client(" + client.getId() + ") arrived in ShoesRoom and gets nice shoes.");
         // borrowing shoes takes some time...
         client.waitInShoesRoom();
 
@@ -36,12 +37,11 @@ public class ShoesRoom extends GroupSynchronizer {
      * Not synchronized since instance variables are not touched (so far).
      */
     public void returnShoes(Client client) {
+        System.out.println("Client(" + client.getId() + ") returned to ShoesRoom and returned his shoes. He's done for today and goes home.");
         // returning shoes takes some time...
         client.waitInShoesRoom();
 
         // just sets shoes to null in the Client object.
         client.returnShoes();
-
-        // No need to wait for his whole Group since Group splits after playing
     }
 }

@@ -28,6 +28,7 @@ public class RegistrationDesk {
     }
 
     public synchronized void register(Client client) {
+        System.out.println("Client(" + client.getId() + ") arrived at RegistrationDesk to register.");
         // registering takes some time...
         client.waitAtRegistrationDesk();
 
@@ -37,11 +38,14 @@ public class RegistrationDesk {
         // Assign Client to a Group and let Client know about his Group
         Group group = getAssignedGroupForClient();
         client.setGroup(group);
+        System.out.print(" He got assigned to Group(" + group.getId() + ").");
 
         // When Group is full, notify all Group members that they can advance.
         if (group.isFull()) {
+            System.out.print(" Now Group is complete!\n");
             notifyAll();
         } else {
+            System.out.print(" But Group isn't complete yet.\n");
             try {
                 wait();
             } catch (InterruptedException e) {
@@ -65,6 +69,7 @@ public class RegistrationDesk {
     }
 
     public synchronized void pay(Client client) {
+        System.out.println("Client(" + client.getId() + ") returned to RegistrationDesk for paying.");
         // paying takes some time...
         client.waitAtRegistrationDesk();
 

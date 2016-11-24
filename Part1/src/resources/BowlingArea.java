@@ -1,12 +1,12 @@
 package resources;
 
-import utils.Group;
-
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Created by mo on 17.11.16.
+ * A BowlingArea has no direct interaction with the Clients. It is only responsible to inform
+ * the DancingRoom that a BowlingAlley is free. Clients then work directly with the passed
+ * object of a BowlingAlley.
  */
 public class BowlingArea {
     private static int NUM_ALLEYS = 3;
@@ -48,6 +48,8 @@ public class BowlingArea {
         availableAlleys.remove(freeAlley);
         occupiedAlleys.add(freeAlley);
 
+        System.out.println("(BowlingArea): A free BowlingAlley just got assigned to a Group. Available BowlingAlleys now: " + availableAlleys.size() + "/" + NUM_ALLEYS);
+
         return freeAlley;
     }
 
@@ -76,6 +78,8 @@ public class BowlingArea {
     public synchronized void gameEnded(BowlingAlley releasedAlley) {
         occupiedAlleys.remove(releasedAlley);
         availableAlleys.add(releasedAlley);
+
+        System.out.println("(BowlingArea): A bowling game ended. Available BowlingAlleys now: " + availableAlleys.size() + "/" + NUM_ALLEYS);
 
         // Notify DancingRoom that game ended.
         dancingRoom.gameEnded();

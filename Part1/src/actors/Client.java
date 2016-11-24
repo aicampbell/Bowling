@@ -53,11 +53,11 @@ public class Client implements Runnable {
     }
 
     public void bowl() {
-        chill(5000);
+        chill(3000);
     }
 
     private void randomArrivalDelay() {
-        int randomDelay = (int)(100000 * Math.random());
+        int randomDelay = (int)(10000 * Math.random());
         chill(randomDelay);
     }
 
@@ -74,6 +74,10 @@ public class Client implements Runnable {
 
     public void returnShoes() {
         this.shoePair = null;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public Group getGroup() {

@@ -16,8 +16,8 @@ public class DancingRoom extends GroupSynchronizer {
     }
 
     public synchronized BowlingAlley danceAndRequestAlley(Client client) {
-        // dance
-        super.waitForWholeGroup(client);
+        System.out.print("Client(" + client.getId() + ") arrived in DancingRoom. ");
+        super.waitForWholeGroup(client); // dance while waiting...
 
         Group group = client.getGroup();
 
@@ -32,15 +32,20 @@ public class DancingRoom extends GroupSynchronizer {
          */
         while (!group.hasAlleyAssigned()) {
             if (!bowlingArea.isAlleyFree()) {
+                System.out.println("Client(" + client.getId() + ") is disappointed because no BowlingAlley is free :(.");
                 try {
                     wait(); // dance even more
                 } catch (InterruptedException e) {
                 }
+                System.out.println("Client(" + client.getId() + ") is hyped about a free BowlingAlley -- Trying to get it!");
             } else {
                 BowlingAlley freeAlley = bowlingArea.getFreeAlley();
                 group.setBowlingAlley(freeAlley);
             }
         }
+
+        System.out.println("Client(" + client.getId() + ") in Group(" + group.getId() + ") can play on BowlingAlley(" + group.getBowlingAlley().getId() + ").");
+
         return group.getBowlingAlley();
     }
 

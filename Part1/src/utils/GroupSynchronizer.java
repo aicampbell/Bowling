@@ -26,6 +26,7 @@ public abstract class GroupSynchronizer {
      */
     protected synchronized void waitForWholeGroup(Client client) {
         Group group = client.getGroup();
+        System.out.print("Client(" + client.getId() + ") is waiting for his Group(" + group.getId() + ").");
         Set<Client> clientsWaiting = getWaitingClientsForGroup(group);
 
         // Check if Group is complete with this arriving Client.
@@ -33,6 +34,7 @@ public abstract class GroupSynchronizer {
         // All other waiting Clients are woken up (notifyAll) and each will check if his/her Group has access
         // now (see following while()-loop).
         if (clientsWaiting.size() + 1 == group.getMaxSize()) {
+            System.out.print(" Now Group is complete!\n");
             groupsWithAccess.add(group);
             notifyAll();
         }
@@ -40,6 +42,7 @@ public abstract class GroupSynchronizer {
         // If Client's Group has (still) no access, make sure he's added to the waiting Clients and suspend thread.
         // If Client's Group has access, its Group is complete and he can advance (leave this while()-loop).
         while (!groupsWithAccess.contains(group)) {
+            System.out.print(" But Group isn't complete yet.\n");
             // Add client to waiting clients for a Group, if he's not in the Group yet.
             // The add() method on a Set will not change the set of the Client is already in the Set.
             clientsWaiting.add(client);

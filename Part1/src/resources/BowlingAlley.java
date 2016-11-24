@@ -26,11 +26,14 @@ public class BowlingAlley {
      *               if it isn't complete yet.
      */
     public synchronized void waitAtAlleyForGroup(Client client) {
+        System.out.print("Client(" + client.getId() + ") is waiting for his Group(" + client.getGroup().getId() + ") at BowlingAlley(" + id + ").");
         clientsReadyToPlay++;
 
         if (clientsReadyToPlay == client.getGroup().getMaxSize()) {
+            System.out.print(" Now Group is complete!\n");
             notifyAll();
         } else {
+            System.out.print(" But Group isn't complete yet.\n");
             try {
                 wait();
             } catch (InterruptedException e) {
@@ -45,6 +48,8 @@ public class BowlingAlley {
      * @param client Client that will start bowling
      */
     public void play(Client client) {
+        System.out.println("Client(" + client.getId() + ") in Group(" + client.getGroup().getId() + ") is bowling now on BowlingAlley(" + id + ")!");
+
         // Clients play
         client.bowl();
 
@@ -61,8 +66,14 @@ public class BowlingAlley {
     public synchronized void gameEnded(Client client) {
         Group group = client.getGroup();
         if(group.getBowlingAlley() != null) {
+            System.out.println("Client(" + client.getId() + ") informs BowlingArea that Group(" + group.getId() + ")'s game is over now.");
+            clientsReadyToPlay = 0;
             group.forgetBowlingAlley();
             bowlingArea.gameEnded(this);
         }
+    }
+
+    public synchronized int getId() {
+        return id;
     }
 }

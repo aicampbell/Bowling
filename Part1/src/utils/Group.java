@@ -19,6 +19,10 @@ public class Group {
         numClients = 0;
     }
 
+    public int getId() {
+        return id;
+    }
+
     public synchronized void addClient() {
         numClients++;
     }
