@@ -1,4 +1,4 @@
-package resources;
+package stations;
 
 import actors.Client;
 import utils.Group;

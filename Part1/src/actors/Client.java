@@ -1,7 +1,8 @@
 package actors;
 
-import resources.*;
+import stations.*;
 import utils.Group;
+import utils.ShoePair;
 
 /**
  * A Client is considered a Thread in our design. He visits the different

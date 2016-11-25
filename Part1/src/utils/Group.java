@@ -1,7 +1,7 @@
 package utils;
 
 import actors.Client;
-import resources.BowlingAlley;
+import stations.BowlingAlley;
 
 /**
  * Represents a Group that Clients can be assigned to. The Group object doesn't know its belonging

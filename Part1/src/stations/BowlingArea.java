@@ -1,4 +1,4 @@
-package resources;
+package stations;
 
 import java.util.HashSet;
 import java.util.Set;

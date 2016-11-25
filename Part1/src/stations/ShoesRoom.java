@@ -1,7 +1,8 @@
-package resources;
+package stations;
 
 import actors.Client;
 import utils.GroupSynchronizer;
+import utils.ShoePair;
 
 /**
  * ShoesRoom is a room every Client has to pass. It is entered after the RegistrationDesk

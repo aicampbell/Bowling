@@ -1,7 +1,7 @@
 import actors.Client;
-import resources.DancingRoom;
-import resources.RegistrationDesk;
-import resources.ShoesRoom;
+import stations.DancingRoom;
+import stations.RegistrationDesk;
+import stations.ShoesRoom;
 
 import java.util.ArrayList;
 import java.util.List;
