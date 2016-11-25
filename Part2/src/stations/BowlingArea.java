@@ -9,7 +9,9 @@ import java.util.Set;
  * object of a BowlingAlley.
  */
 public class BowlingArea {
-    /** Total number of BowlingAlleys the BowlingArea consists of. */
+    /**
+     * Total number of BowlingAlleys the BowlingArea consists of.
+     */
     private static int NUM_ALLEYS = 3;
 
     /**
@@ -19,23 +21,21 @@ public class BowlingArea {
     DancingRoom dancingRoom;
 
     /**
-     * These two sets keep track of the available and occupiedAlleys. Note that
-     * {@code availableAlleys.size() + occupiedAlleys.size() == NUM_ALLEYS} is
-     * always true.
-     *
+     * This set keep track of the available BowlingAlleys.
+     * <p>
      * A 'counting semaphore' may be used instead (not tested, just an idea)
-     * but our implementation keeps track of available and occupied BowlingAlleys
-     * via these two sets.
+     * but our implementation keeps track of available BowlingAlleys
+     * via this set.
      */
     Set<BowlingAlley> availableAlleys;
-    Set<BowlingAlley> occupiedAlleys;
 
-    /** Construct BowlingArea with NUM_ALLEYS BowlingAlleys. */
+    /**
+     * Construct BowlingArea with NUM_ALLEYS BowlingAlleys.
+     */
     public BowlingArea(DancingRoom dancingRoom) {
         this.dancingRoom = dancingRoom;
 
         availableAlleys = new HashSet<>();
-        occupiedAlleys = new HashSet<>();
 
         for (int i = 0; i < NUM_ALLEYS; i++) {
             availableAlleys.add(new BowlingAlley(i, this));
@@ -58,7 +58,6 @@ public class BowlingArea {
 
         BowlingAlley freeAlley = availableAlleys.iterator().next();
         availableAlleys.remove(freeAlley);
-        occupiedAlleys.add(freeAlley);
 
         System.out.println("(BowlingArea): A free BowlingAlley just got assigned to a Group. Available BowlingAlleys now: " + availableAlleys.size() + "/" + NUM_ALLEYS);
 
@@ -87,7 +86,6 @@ public class BowlingArea {
      * @param releasedAlley the BowlingAlley object on which a game just ended
      */
     public synchronized void gameEnded(BowlingAlley releasedAlley) {
-        occupiedAlleys.remove(releasedAlley);
         availableAlleys.add(releasedAlley);
 
         System.out.println("(BowlingArea): A bowling game ended. Available BowlingAlleys now: " + availableAlleys.size() + "/" + NUM_ALLEYS);

@@ -105,14 +105,14 @@ public class RegistrationDesk {
     }
 
     /**
-     * Every Client must pay at the RegistrationDesk after his bowling match is over.
+     * Every Client must chargeFee at the RegistrationDesk after his bowling match is over.
      *
      * This method is {@code synchronized} because a shared variable is currently modified.
      * See last method comment for an alternative approach.
      *
-     * @param client Client that has to pay
+     * @param client Client that has to chargeFee
      */
-    public synchronized void pay(Client client) {
+    public synchronized void chargeFee(Client client) {
         System.out.println("Client(" + client.getId() + ") returned to RegistrationDesk for paying.");
 
         /** Paying takes some time... */

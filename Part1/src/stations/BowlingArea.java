@@ -19,23 +19,19 @@ public class BowlingArea {
     DancingRoom dancingRoom;
 
     /**
-     * These two sets keep track of the available and occupiedAlleys. Note that
-     * {@code availableAlleys.size() + occupiedAlleys.size() == NUM_ALLEYS} is
-     * always true.
+     * This set keeps track of the available BowlingAlleys.
      *
      * A 'counting semaphore' may be used instead (not tested, just an idea)
-     * but our implementation keeps track of available and occupied BowlingAlleys
-     * via these two sets.
+     * but our implementation keeps track of available BowlingAlleys
+     * via this set.
      */
     Set<BowlingAlley> availableAlleys;
-    Set<BowlingAlley> occupiedAlleys;
 
     /** Construct BowlingArea with NUM_ALLEYS BowlingAlleys. */
     public BowlingArea(DancingRoom dancingRoom) {
         this.dancingRoom = dancingRoom;
 
         availableAlleys = new HashSet<>();
-        occupiedAlleys = new HashSet<>();
 
         for (int i = 0; i < NUM_ALLEYS; i++) {
             availableAlleys.add(new BowlingAlley(i, this));
@@ -58,7 +54,6 @@ public class BowlingArea {
 
         BowlingAlley freeAlley = availableAlleys.iterator().next();
         availableAlleys.remove(freeAlley);
-        occupiedAlleys.add(freeAlley);
 
         System.out.println("(BowlingArea): A free BowlingAlley just got assigned to a Group. Available BowlingAlleys now: " + availableAlleys.size() + "/" + NUM_ALLEYS);
 
@@ -81,13 +76,12 @@ public class BowlingArea {
     /**
      * Here we need a {@code synchronized}. The only calling method is already {@code synchronized},
      * however it can be called from _different instances_ of BowlingAlley. Therefore we need
-     * to guarantee here that shared variables {@code occupiedAlleys} and {@code availableAlleys}
-     * are modified by only one Thread at a time.
+     * to guarantee here that shared variable {@code availableAlleys} is modified by only one
+     * thread at a time.
      *
      * @param releasedAlley the BowlingAlley object on which a game just ended
      */
     public synchronized void gameEnded(BowlingAlley releasedAlley) {
-        occupiedAlleys.remove(releasedAlley);
         availableAlleys.add(releasedAlley);
 
         System.out.println("(BowlingArea): A bowling game ended. Available BowlingAlleys now: " + availableAlleys.size() + "/" + NUM_ALLEYS);

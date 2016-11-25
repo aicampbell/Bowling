@@ -82,6 +82,7 @@ public class DancingRoom extends GroupSynchronizer {
      * keyword {@code synchronized} to the method.
      */
     public synchronized void gameEnded() {
+        System.out.println("DancingRoom got notified that a BowlingAlley just got free!");
         notifyAll();
     }
 }

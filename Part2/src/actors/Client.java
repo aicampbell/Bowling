@@ -64,7 +64,7 @@ public class Client implements Runnable {
         forgetAboutGroup();
 
         /** Pay at RegistrationDesk. */
-        registrationDesk.pay(this);
+        registrationDesk.chargeFee(this);
 
         /** Return shoes in ShoesRoom. */
         shoesRoom.returnShoes(this);
