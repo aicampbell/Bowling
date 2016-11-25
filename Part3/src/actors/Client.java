@@ -100,7 +100,11 @@ public class Client implements Runnable {
         this.shoePair = shoePair;
     }
 
-    public void returnShoes() {
+    public ShoePair returnShoes() {
+        return shoePair;
+    }
+
+    public void forgetShoes() {
         this.shoePair = null;
     }
 

@@ -12,7 +12,7 @@ import stations.BowlingAlley;
  */
 public class Group {
     /** The amount of Clients that be assigned to a Group at most. */
-    private static int MAX_SIZE = 5;
+    public static int MAX_SIZE = 5;
 
     /** Id of the Group. */
     private int id;
