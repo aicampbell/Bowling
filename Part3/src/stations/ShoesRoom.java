@@ -5,7 +5,6 @@ import utils.Group;
 import utils.GroupSynchronizer;
 import utils.ShoePair;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,64 +18,98 @@ public class ShoesRoom extends GroupSynchronizer {
     private int MAX_SHOES = Group.MAX_SIZE * BowlingArea.NUM_ALLEYS;
 
     private class ShoeMonitor {
-        Set<Client> waiters;
+        private int numReturnersWaiting = 0;
+        private int numBorrowersWaiting = 0;
+        private boolean isClientProcessed = false;
 
-        public ShoeMonitor() {
-            waiters =  new HashSet<>();
+        public synchronized void enqueueReturner(Client client) {
+            System.out.println("---Client(" + client.getId() + ") wants to return his shoes.");
+            /*if (borrowMonitor.isProcessingClient()) {
+                numReturnersWaiting++;
+                System.out.println("---Client(" + client.getId() + ") must wait before returning his shoes because someone is currently borrowing shoes.");
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                }
+                numReturnersWaiting--;
+                System.out.println("---Client(" + client.getId() + ") got notified that he can return his shoes now.");
+            }*/
+
+            isClientProcessed = true;
+            returnShoePair(client);
+            isClientProcessed = false;
+
+            //borrowMonitor.wakeUpOne();
+
+            /*if(numReturnersWaiting > 0) {
+                System.out.print("---(at least 1 returner is waiting. we wake one returner up.");
+                wakeUpOne();
+            } else {
+                borrowMonitor.wakeUpOne();
+                /*if (borrowMonitor.getNumBorrowersWaiting() > 0){
+                System.out.print("---(no returners waiting but at least 1 borrower is waiting. we wake one borrower up.");
+                borrowMonitor.wakeUpOne();
+            }
+            }*/
+            //System.out.println("Client(" + client.getId() + "): passed last wakingUp section.");
         }
 
-        public synchronized void enqueue(Client client) {
-            waiters.add(client);
-            try {
-                wait();
-            } catch (InterruptedException e) {
+        public synchronized void enqueueBorrower(Client client) {
+            while(!isShoePairAvailable() ||
+                    /*returnMonitor.isProcessingClient() ||*/
+                    returnMonitor.getNumReturnersWaiting() > 0) {
+                numBorrowersWaiting++;
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                }
+                numBorrowersWaiting--;
             }
-            //client.borrowShoes(getShoePair());
+
+            isClientProcessed = true;
+            borrowShoePair(client);
+            isClientProcessed = false;
+            //System.out.println("Client(" + client.getId() + "): isProcessed=false now.");
+
+            //returnMonitor.wakeUpOne();
+            //returnMonitor.notify();
+            if(numBorrowersWaiting > 0) {
+                wakeUpOne();
+            }
+            //System.out.println("Client(" + client.getId() + "): passed last wakingUp section.");
+            /*if(returnMonitor.getNumReturnersWaiting() > 0) {
+                returnMonitor.wakeUpOne();
+            } else if (numBorrowersWaiting > 0){
+                wakeUpOne();
+            }*/
         }
 
         public synchronized void wakeUpOne() {
             notify();
         }
 
-        public synchronized void borrowShoes(Client client) {
-            while(!isShoePairAvailable() || !returnMonitor.isEmpty()) {
-
-            }
-
-            client.borrowShoes(getShoePair());
-            waiters.add(client);
-            // Enqueue Client
-            try {
-                wait();
-            } catch (InterruptedException e) {
-            }
+        public synchronized int getNumReturnersWaiting() {
+            return numReturnersWaiting;
+        }
+        public synchronized int getNumBorrowersWaiting() {
+            return numBorrowersWaiting;
+        }
+        public synchronized boolean isProcessingClient() {
+            return isClientProcessed;
         }
 
-        public synchronized void returnShoes(Client client) {
-            while(!returnMonitor.isEmpty()) {
-                try {
-                    wait();
-                } catch (InterruptedException e) {
-                }
-            }
-
-            availableShoes.add(client.returnShoes());
-            client.forgetShoes();
-
-            // Enqueue Client
-
+        public synchronized void returnShoePair(Client client) {
+            returnShoes(client);
         }
 
-        public boolean isEmpty() {
-            return waiters.isEmpty();
+        public synchronized void borrowShoePair(Client client) {
+            borrowShoes(client);
         }
     }
 
     private Set<ShoePair> availableShoes;
     private ShoeMonitor borrowMonitor;
     private ShoeMonitor returnMonitor;
-
-    private boolean returnerIsWaiting = false;
 
     public ShoesRoom() {
         super();
@@ -89,19 +122,20 @@ public class ShoesRoom extends GroupSynchronizer {
         }
     }
 
+    public void requestBorrowingShoes(Client client) {
+        borrowMonitor.enqueueBorrower(client);
+        super.waitForWholeGroup(client);
+    }
+    public void requestReturningShoes(Client client) {
+        returnMonitor.enqueueReturner(client);
+    }
+
     /**
      * Not {@code synchronized} since instance variables are not touched here. Only the call
      * to {@link GroupSynchronizer#waitForWholeGroup(Client)} is synchronized.
      */
-    public synchronized void giveShoes(Client client) {
-        System.out.println("Client(" + client.getId() + ") arrived in ShoesRoom and gets requests shoes.");
-
-        while(!isShoePairAvailable() || !returnMonitor.isEmpty()) {
-            borrowMonitor.enqueue(client);
-        }
-
-        /** Borrowing shoes takes some time... */
-        client.waitInShoesRoom();
+    private synchronized void borrowShoes(Client client) {
+        System.out.println("---Client(" + client.getId() + ") is borrowing his Shoes right now.");
 
         /**
          * As stated in the text: We need to make sure that we give every Client a
@@ -110,47 +144,29 @@ public class ShoesRoom extends GroupSynchronizer {
          */
         client.borrowShoes(getShoePair());
 
-        /**
-         * Check if Client's Group is complete now.
-         * If not, wait for the remaining Clients for that Group.
-         * If yes, go on with the whole Group.
-         */
-        //super.waitForWholeGroup(client);
-        if(!returnMonitor.isEmpty()) {
-            returnMonitor.wakeUpOne();
-        } else if(!borrowMonitor.isEmpty()) {
-            borrowMonitor.wakeUpOne();
-        }
+        /** Borrowing shoes takes some time... */
+        client.waitInShoesRoom();
     }
 
     /**
      * Not synchronized since instance variables are not touched here.
      */
-    public synchronized void returnShoes(Client client) {
-        System.out.println("Client(" + client.getId() + ") returned to ShoesRoom and returned his shoes. He's done for today and goes home.");
-
-        returnMonitor.returnShoes(client);
-
-        /** Returning shoes takes some time... */
-        client.waitInShoesRoom();
+    private synchronized void returnShoes(Client client) {
+        System.out.println("---Client(" + client.getId() + ") is returning his shoes right now. He's done for today and goes home.");
 
         /** Client returns ShoePair which are added to {@code availableShoes} again. */
         availableShoes.add(client.returnShoes());
         client.forgetShoes();
 
-        /*if(!returnMonitor.isEmpty()) {
-            returnMonitor.notify();
-        } else {
-            borrowMonitor.notify();
-        }*/
-        borrowMonitor.wakeUpOne();
+        /** Returning shoes takes some time... */
+        client.waitInShoesRoom();
     }
 
-    public boolean isShoePairAvailable() {
+    private synchronized boolean isShoePairAvailable() {
         return !availableShoes.isEmpty();
     }
 
-    public ShoePair getShoePair() {
+    private synchronized ShoePair getShoePair() {
         assert !availableShoes.isEmpty();
         return availableShoes.iterator().next();
     }

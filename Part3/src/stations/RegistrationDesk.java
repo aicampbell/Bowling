@@ -93,7 +93,7 @@ public class RegistrationDesk {
          */
         while (!isCashierFree()) {
             try {
-                System.out.println("Client(" + client.getId() + ") has to wait because no Cashier is free.");
+                //System.out.println("Client(" + client.getId() + ") has to wait because no Cashier is free.");
                 wait();
             } catch (InterruptedException e) {
             }
@@ -139,7 +139,7 @@ public class RegistrationDesk {
             notifyAll();
         }
         while (!group.isFull()) {
-            System.out.println("Group(" + group.getId() + ") isn't complete yet.");
+            //System.out.println("Group(" + group.getId() + ") isn't complete yet.");
             try {
                 wait();
             } catch (InterruptedException e) {
@@ -165,7 +165,7 @@ public class RegistrationDesk {
         Cashier freeCashier = availableCashiers.iterator().next();
         availableCashiers.remove(freeCashier);
 
-        System.out.println("(RegistrationDesk): A free Cashier just got assigned to a Client. Available Cashiers now: " + availableCashiers.size() + "/" + NUM_CASHIERS);
+        //System.out.println("(RegistrationDesk): A free Cashier just got assigned to a Client. Available Cashiers now: " + availableCashiers.size() + "/" + NUM_CASHIERS);
 
         return freeCashier;
     }
@@ -235,7 +235,7 @@ public class RegistrationDesk {
      * @param cashier Cashier that just got free.
      */
     public synchronized void cashierGotAvailable(Cashier cashier) {
-        System.out.println("Cashier(" + cashier.getId() + ") is free now!");
+        //System.out.println("Cashier(" + cashier.getId() + ") is free now!");
         availableCashiers.add(cashier);
         /**
          * Since one cashier can only handle one Client at a time, a {@code notify()} seems

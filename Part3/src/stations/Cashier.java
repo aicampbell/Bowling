@@ -27,7 +27,7 @@ public class Cashier {
      * @param client Client that wants to register
      */
     public synchronized void register(Client client) {
-        System.out.println("Client(" + client.getId() + ") arrived at Cashier(" + id + ") to register.");
+        //System.out.println("Client(" + client.getId() + ") arrived at Cashier(" + id + ") to register.");
 
         /** Registering takes some time... */
         client.waitAtRegistrationDesk();
@@ -41,7 +41,7 @@ public class Cashier {
         /** Assign Client to a Group and let Client know about his Group. */
         Group group = registrationDesk.getAssignedGroupForClient();
         client.setGroup(group);
-        System.out.println("Client(" + client.getId() + ") got assigned to Group(" + group.getId() + ").");
+        //System.out.println("Client(" + client.getId() + ") got assigned to Group(" + group.getId() + ").");
 
         /** Notify the RegistrationDesk that this Cashier is now available again. */
         cashierGotAvailable();
@@ -56,7 +56,7 @@ public class Cashier {
      * @param client Client that has to chargeFee
      */
     public synchronized void chargeFee(Client client) {
-        System.out.println("Client(" + client.getId() + ") returned to Cashier(" + id + ") for paying.");
+        //System.out.println("Client(" + client.getId() + ") returned to Cashier(" + id + ") for paying.");
 
         /** Paying takes some time... */
         client.waitAtRegistrationDesk();

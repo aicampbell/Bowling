@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class BowlingSimulation {
     /** Number of Client-threads that are executed. */
-    private static int NUM_CLIENTS = Group.MAX_SIZE * 5;
+    private static int NUM_CLIENTS = Group.MAX_SIZE * 10;
 
     /**
      * The rooms/desk a Client has to go through. In our design he will have to know

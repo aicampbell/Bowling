@@ -16,7 +16,7 @@ public class Client implements Runnable {
     private static int MAX_DELAY_TIME = 10000;
     private static int BOWLING_TIME = 3000;
     private static int REGISTER_PAY_TIME = 1000;
-    private static int BORROW_RETURN_SHOES_TIME = 1000;
+    private static int BORROW_RETURN_SHOES_TIME = 3000;
 
     /** Id of a Client. */
     private int id;
@@ -50,7 +50,7 @@ public class Client implements Runnable {
         registrationDesk.register(this);
 
         /** Get shoes in ShoesRoom. */
-        shoesRoom.giveShoes(this);
+        shoesRoom.requestBorrowingShoes(this);
 
         /**
          * Go to DanceRoom and dance until a BowlingAlley gets free AND is assigned to
@@ -67,7 +67,7 @@ public class Client implements Runnable {
         registrationDesk.chargeFee(this);
 
         /** Return shoes in ShoesRoom. */
-        shoesRoom.returnShoes(this);
+        shoesRoom.requestReturningShoes(this);
 
         /** go home */
     }
