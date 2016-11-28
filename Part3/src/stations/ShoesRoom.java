@@ -36,6 +36,9 @@ public class ShoesRoom extends GroupSynchronizer {
      */
     private volatile int numReturners = 0;
 
+    private Set<Client> waitingBorrowers;
+    private Set<Group> servedBorrowerGroups;
+
     /**
      * Inner class to provide a second monitor object on which Client-threads
      * can be locked.
@@ -69,6 +72,8 @@ public class ShoesRoom extends GroupSynchronizer {
         super();
         availableShoes = new HashSet<>();
         returnerMonitor = new ReturnerMonitor();
+        waitingBorrowers = new HashSet<>();
+        servedBorrowerGroups = new HashSet<>();
 
         for(int i = 0; i < MAX_SHOES; i++) {
             availableShoes.add(new ShoePair());
@@ -117,8 +122,11 @@ public class ShoesRoom extends GroupSynchronizer {
      */
     private synchronized void borrowShoes(Client client) {
         System.out.println("---Client(" + client.getId() + ") wants to borrow his shoes.");
+        Group group = client.getGroup();
 
         /**
+         * WITHOUT prioritizing served Groups: [waiting condition: numReturners > 0 || !isShoePairAvailable()) ]
+         * -----------------------------------
          * Two possibilities here:
          *
          * while() because we have to recheck if a ShoePair is available. This re-check
@@ -131,15 +139,43 @@ public class ShoesRoom extends GroupSynchronizer {
          * is only woken up if there is an available ShoePair. This is more efficient since
          * the scenario of waking up a borrower who checks the condition and wait()s again,
          * is avoided (redundant notify() avoided).
+         *
+         *
+         * WITH prioritizing served Groups: [waiting condition: numReturners > 0 || !isShoePairAvailable() ||
+         !(servedBorrowerGroups.contains(group) || waitingBorrowers.isEmpty()) ]
+         * --------------------------------
+         * We track the waiting borrowers right before and right after the {@code wait()}. After the while(),
+         * we also track the Groups which are already served (partially or fully).
+         * With these 2 new kinds of information, we can extend the waiting condition.
+         *
+         * The condition extension reads like: "IF borrower is in a served Group OR he's the only
+         * remaining waiting burrower who's Group hasn't been served yet, THEN escape the while-loop and go on."
          */
-        if(numReturners > 0 || !isShoePairAvailable()) {
+        while(numReturners > 0 || !isShoePairAvailable() ||
+                !(servedBorrowerGroups.contains(group) || waitingBorrowers.isEmpty())) {
             System.out.println("---Client(" + client.getId() + ") has to wait for returners or shoes (" + availableShoes.size() + "/" + MAX_SHOES + ").");
+
+            /** Register every waiting borrower in {@code waitingBorrowers}. */
+            waitingBorrowers.add(client);
             try {
                 wait();
             } catch (InterruptedException e) {
             }
+            /** A notifyAll() got invoked (there is no single notify() on this monitor anymore). */
+            waitingBorrowers.remove(client);
         }
         System.out.println("---Client(" + client.getId() + ") can borrow shoes(" + availableShoes.size() + "/" + MAX_SHOES + ") now! (soon -1 !)");
+
+        /**
+         * At this point, Borrower _can_ borrow shoes, he escaped the waiting condition from above.
+         * Therefore we can add him to the set {@code servedBorrowerGroups} which contains
+         * all partially or fully handled Groups.
+         *
+         * This can be made more memory-efficient by distinguishing between partially and fully handled
+         * Groups so that fully handled Groups are removed from this set again to save memory (just
+         * a suggestion for improvement. Not implemented because purpose of all this is synchronization...).
+         */
+        servedBorrowerGroups.add(group);
 
         /**
          * As stated in the text: We need to make sure that we give every Client a
@@ -163,7 +199,12 @@ public class ShoesRoom extends GroupSynchronizer {
         if(numReturners > 0) {
             returnerMonitor.wakeOneReturnerUp();
         } else if(isShoePairAvailable()){
-            notify();
+            /**
+             * Without prioritizing already served Groups, this can be a {@code notify()}. With this
+             * additional requirement however, we have to look through all waiting borrowers to determine
+             * which one we allow to borrow shoes (done at the beginning of this method).
+             */
+            notifyAll();
         }
     }
 
@@ -193,10 +234,19 @@ public class ShoesRoom extends GroupSynchronizer {
             returnerMonitor.wakeOneReturnerUp();
         } else {
             /**
-             * We don't have to check for availableShoes because we just returned one. So it's sure that
-             * there is at least one shoe pair available for a waiter on this monitor (=Borrower) to grab.
+             * WITHOUT respecting already served Groups:
+             * -----------------------------------------
+             * Use {@code notify()}. We don't have to check for availableShoes because we
+             * just returned one. So it's sure that there is at least one shoe pair available
+             * for a waiter on this monitor (=Borrower) to grab.
+             *
+             * WITH respecting already served Groups:
+             * --------------------------------------
+             * Use {@code notifyAll()}. With this additional requirement, we have to look through
+             * all waiting borrowers to determine which one we allow to borrow shoes (done at
+             * the beginning of this method).
              */
-            notify();
+            notifyAll();
         }
     }
 
