@@ -67,6 +67,7 @@ public class Cashier {
          * this method doesn't have to be {@code synchronized}.
          */
         registrationDesk.removeClient(client);
+        System.out.println("Client(" + client.getId() + ") just paid.");
 
         /** Notify the RegistrationDesk that this Cashier is now available again. */
         cashierGotAvailable();

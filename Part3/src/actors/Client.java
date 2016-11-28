@@ -16,7 +16,7 @@ public class Client implements Runnable {
     private static int MAX_DELAY_TIME = 10000;
     private static int BOWLING_TIME = 3000;
     private static int REGISTER_PAY_TIME = 1000;
-    private static int BORROW_RETURN_SHOES_TIME = 3000;
+    private static int BORROW_RETURN_SHOES_TIME = 500;
 
     /** Id of a Client. */
     private int id;

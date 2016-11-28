@@ -39,7 +39,7 @@ public class DancingRoom extends GroupSynchronizer {
      * @return the BowlingAlley that Client eventually got assigned to.
      */
     public synchronized BowlingAlley danceAndRequestAlley(Client client) {
-        System.out.println("Client(" + client.getId() + ") arrived in DancingRoom.");
+        //System.out.println("Client(" + client.getId() + ") arrived in DancingRoom.");
         Group group = client.getGroup();
 
         /**
