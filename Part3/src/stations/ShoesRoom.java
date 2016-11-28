@@ -168,6 +168,7 @@ public class ShoesRoom extends GroupSynchronizer {
     }
 
     /**
+     * Clients return their shoes here. Their ShoePair gets added to {@code availableShoes}.
      * Not synchronized since instance variables are not touched here.
      */
     private synchronized void returnShoes(Client client) {
