@@ -10,7 +10,7 @@ import java.util.Set;
  */
 public class BowlingArea {
     /** Total number of BowlingAlleys the BowlingArea consists of. */
-    private static int NUM_ALLEYS = 3;
+    public static int NUM_ALLEYS = 3;
 
     /**
      * Reference to the DancingRoom to inform him that BowlingAlley is free'd up after

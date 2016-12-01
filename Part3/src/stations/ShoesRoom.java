@@ -15,7 +15,7 @@ import java.util.Set;
  * It makes use of Group synchronization by extending {@link GroupSynchronizer}.
  */
 public class ShoesRoom extends GroupSynchronizer {
-    private int MAX_SHOES = Group.MAX_SIZE * BowlingArea.NUM_ALLEYS;
+    public static int MAX_SHOES = Group.MAX_SIZE * BowlingArea.NUM_ALLEYS;
 
     /**
      * A set of ShoePairs which are available for borrowers.

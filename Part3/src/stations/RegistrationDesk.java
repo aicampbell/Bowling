@@ -14,7 +14,7 @@ import java.util.Set;
  * he will play a bowling game.
  */
 public class RegistrationDesk {
-    private static int NUM_CASHIERS = 3;
+    public static int NUM_CASHIERS = 3;
 
     /**
      * This list contains all Groups that are complete.

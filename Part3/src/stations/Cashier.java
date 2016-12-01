@@ -26,7 +26,7 @@ public class Cashier {
      *
      * @param client Client that wants to register
      */
-    public synchronized void register(Client client) {
+    public void register(Client client) {
         //System.out.println("Client(" + client.getId() + ") arrived at Cashier(" + id + ") to register.");
 
         /** Registering takes some time... */
@@ -55,7 +55,7 @@ public class Cashier {
      *
      * @param client Client that has to chargeFee
      */
-    public synchronized void chargeFee(Client client) {
+    public void chargeFee(Client client) {
         //System.out.println("Client(" + client.getId() + ") returned to Cashier(" + id + ") for paying.");
 
         /** Paying takes some time... */

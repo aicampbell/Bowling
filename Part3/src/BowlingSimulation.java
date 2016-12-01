@@ -1,4 +1,5 @@
 import actors.Client;
+import stations.BowlingArea;
 import stations.DancingRoom;
 import stations.RegistrationDesk;
 import stations.ShoesRoom;
@@ -11,8 +12,11 @@ import java.util.List;
  * This class is responsible for setting up the system and create the Client-threads
  */
 public class BowlingSimulation {
+    /** Number of Groups == number of bowling matches played */
+    public static int NUM_GROUPS = 10;
+
     /** Number of Client-threads that are executed. */
-    private static int NUM_CLIENTS = Group.MAX_SIZE * 10;
+    public static int NUM_CLIENTS = Group.MAX_SIZE * NUM_GROUPS;
 
     /**
      * The rooms/desk a Client has to go through. In our design he will have to know
@@ -63,5 +67,12 @@ public class BowlingSimulation {
         });
 
         System.out.println("-------------------------\nBowling simulation ended.");
+
+        System.out.println("Number of Clients: " + NUM_CLIENTS);
+        System.out.println("Games played (number of Groups): " + NUM_GROUPS);
+        System.out.println("Group size: " + Group.MAX_SIZE);
+        System.out.println("Number of BowlingAlleys: " + BowlingArea.NUM_ALLEYS);
+        System.out.println("Number of Cashiers: " + RegistrationDesk.NUM_CASHIERS);
+        System.out.println("Number of ShoePairs: " + ShoesRoom.MAX_SHOES);
     }
 }
