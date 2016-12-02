@@ -5,7 +5,9 @@ import utils.Group;
 import utils.GroupSynchronizer;
 import utils.ShoePair;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -30,14 +32,23 @@ public class ShoesRoom extends GroupSynchronizer {
     private ReturnerMonitor returnerMonitor;
 
     /**
-     * Volatile so read-accesses are guaranteed to read the most recent value.
-     * This is needed because this value is checked and modified outside of
-     * {@code synchronized} methods.
+     * Reveals if the employee is currently available or not. Is used to provide
+     * mutual exclusion for clients (borrowers and returners to be more specific).
      */
-    private volatile int numReturners = 0;
+    private boolean isEmployeeFree;
 
-    private Set<Client> waitingBorrowers;
-    private Set<Group> servedBorrowerGroups;
+    /**
+     * Volatile so accesses are guaranteed to be correct.
+     * This is needed because this value is modified outside of a
+     * {@code synchronized} method ({@link ShoesRoom#requestBorrowingShoes(Client)}).
+     */
+    private volatile int numReturnersWaiting = 0;
+
+    /**
+     * Data structure to keep track of already served Groups and the number of served
+     * Clients (borrowers) in each Group.
+     */
+    private Map<Group, Integer> servedBorrowerGroups;
 
     /**
      * Inner class to provide a second monitor object on which Client-threads
@@ -72,8 +83,8 @@ public class ShoesRoom extends GroupSynchronizer {
         super();
         availableShoes = new HashSet<>();
         returnerMonitor = new ReturnerMonitor();
-        waitingBorrowers = new HashSet<>();
-        servedBorrowerGroups = new HashSet<>();
+        servedBorrowerGroups = new HashMap<>();
+        isEmployeeFree = true;
 
         for(int i = 0; i < MAX_SHOES; i++) {
             availableShoes.add(new ShoePair());
@@ -90,7 +101,7 @@ public class ShoesRoom extends GroupSynchronizer {
      *
      * @param client who wants to borrow shoes (borrower)
      */
-    public synchronized void requestBorrowingShoes(Client client) {
+    public void requestBorrowingShoes(Client client) {
         borrowShoes(client);
         super.waitForWholeGroup(client);
     }
@@ -98,22 +109,30 @@ public class ShoesRoom extends GroupSynchronizer {
     /**
      * Entry-method for every returner. This is not synchronized because we need to make sure
      * that a returner can signal immediately that he arrived so he gets priority as fast as
-     * possible (this is done by {@code numReturners} which is checked in other methods).
+     * possible (this is done by incrementing {@code numReturnersWaiting} which is checked
+     * in other methods).
      *
-     * The method {@code returnShoes(Client)} must be {@code synchronized} again because
-     * mutual exclusion is required between borrowing and returning shoes (only 1 employee
-     * available who can server either of them at a time.). Also this method works on shared
-     * variables.
+     * The other method {@link ShoesRoom#returnShoes(Client)} is {@code synchronized} though.
      *
      * @param client who wants to return shoes (returner)
      */
     public void requestReturningShoes(Client client) {
-        numReturners++;
+        /** Increment to announce the arrival of this returner. Is done here (outside of a
+         * {@code synchronized} method) so the announcement is made fast.
+         *
+         * When a returner X is done returning shoes in {@link ShoesRoom#returnShoes(Client)}
+         * and he notifies either a borrower or a returner, it is crucial that a potentially
+         * waiting returner Y incremented this variable. And not that Y can't enter
+         * {@link ShoesRoom#returnShoes(Client)} because it's {@code synchronized}
+         * and currently occupied by X. If that happens, a borrower might be woken up and the
+         * rule of given priority to returners is broken.
+         *
+         * So the goal is to announce Y as early as possible.
+         */
+        numReturnersWaiting++;
 
-        if(numReturners > 1) {
-            returnerMonitor.enqueueReturner(client);
-        }
-        returnShoes(client); // synchronized
+        /** This one is {@code synchronized}. */
+        returnShoes(client);
     }
 
     /**
@@ -121,49 +140,35 @@ public class ShoesRoom extends GroupSynchronizer {
      * to {@link GroupSynchronizer#waitForWholeGroup(Client)} is synchronized.
      */
     private synchronized void borrowShoes(Client client) {
-        System.out.println("---Client(" + client.getId() + ") wants to borrow his shoes.");
+        System.out.println("---Client(" + client.getId() + ") wants to borrow shoes.");
         Group group = client.getGroup();
 
         /**
-         * WITHOUT prioritizing served Groups: [waiting condition: numReturners > 0 || !isShoePairAvailable()) ]
-         * -----------------------------------
-         * Two possibilities here:
-         *
-         * while() because we have to recheck if a ShoePair is available. This re-check
-         * is needed because the corresponding notify() (at the end of this method) is
-         * optimistic and doesn't check for isShoePairAvailable(). The woken up borrower
-         * however is only allowed to proceed if there is a ShoePair available.
-         *
-         * As an alternative, we can place an if() here and check for isShoePairAvailable()
-         * at the end of this method before calling notify(). This makes sure that a borrower
-         * is only woken up if there is an available ShoePair. This is more efficient since
-         * the scenario of waking up a borrower who checks the condition and wait()s again,
-         * is avoided (redundant notify() avoided).
-         *
-         *
-         * WITH prioritizing served Groups: [waiting condition: numReturners > 0 || !isShoePairAvailable() ||
-         !(servedBorrowerGroups.contains(group) || waitingBorrowers.isEmpty()) ]
+         * WITH prioritizing served Groups:
+         * [waiting condition: !isEmployeeFree || numReturnersWaiting > 0 || !isShoePairAvailable() ||
+         (!servedBorrowerGroups.isEmpty() && !servedBorrowerGroups.containsKey(group)) ]
          * --------------------------------
-         * We track the waiting borrowers right before and right after the {@code wait()}. After the while(),
-         * we also track the Groups which are already served (partially or fully).
-         * With these 2 new kinds of information, we can extend the waiting condition.
+         * We need a while() now because multiple borrowers might be woken up when respecting the
+         * priority-feature of served Groups.
          *
-         * The condition extension reads like: "IF borrower is in a served Group OR he's the only
-         * remaining waiting burrower who's Group hasn't been served yet, THEN escape the while-loop and go on."
+         * We check {@code servedBorrowerGroups} to keep track of the Groups which are partially served.
+         *
+         * Altogether, there can be 4 reasons now why a borrower has to wait.
          */
-        while(numReturners > 0 || !isShoePairAvailable() ||
-                !(servedBorrowerGroups.contains(group) || waitingBorrowers.isEmpty())) {
-            System.out.println("---Client(" + client.getId() + ") has to wait for returners or shoes (" + availableShoes.size() + "/" + MAX_SHOES + ").");
+        while(!isEmployeeFree || numReturnersWaiting > 0 || !isShoePairAvailable() ||
+                (!servedBorrowerGroups.isEmpty() && !servedBorrowerGroups.containsKey(group))) {
 
-            /** Register every waiting borrower in {@code waitingBorrowers}. */
-            waitingBorrowers.add(client);
+            System.out.println("---Client(" + client.getId() + ") has to wait for the employee or returners or another Group has priority or shoes (" + availableShoes.size() + "/" + MAX_SHOES + ") are insufficient.");
+
             try {
                 wait();
             } catch (InterruptedException e) {
             }
-            /** A notifyAll() got invoked (there is no single notify() on this monitor anymore). */
-            waitingBorrowers.remove(client);
         }
+
+        /** The employee won't be available while serving this borrower. */
+        isEmployeeFree = false;
+
         System.out.println("---Client(" + client.getId() + ") can borrow shoes(" + availableShoes.size() + "/" + MAX_SHOES + ") now! (soon -1 !)");
 
         /**
@@ -171,11 +176,16 @@ public class ShoesRoom extends GroupSynchronizer {
          * Therefore we can add him to the set {@code servedBorrowerGroups} which contains
          * all partially or fully handled Groups.
          *
-         * This can be made more memory-efficient by distinguishing between partially and fully handled
-         * Groups so that fully handled Groups are removed from this set again to save memory (just
-         * a suggestion for improvement. Not implemented because purpose of all this is synchronization...).
+         * Increment the client count for a Group in the map {@code servedBorrowerGroups}. If this Group
+         * is completely processed, remove this Group from the map. This removal is important - it is
+         * not only there for memory optimization. It is needed in the while-condition above.
          */
-        servedBorrowerGroups.add(group);
+        int newCount = servedBorrowerGroups.containsKey(group) ? servedBorrowerGroups.get(group) + 1 : 1;
+        if(newCount < Group.MAX_SIZE) {
+            servedBorrowerGroups.put(group, newCount);
+        } else {
+            servedBorrowerGroups.remove(group);
+        }
 
         /**
          * As stated in the text: We need to make sure that we give every Client a
@@ -187,6 +197,9 @@ public class ShoesRoom extends GroupSynchronizer {
         /** Borrowing shoes takes some time... */
         client.waitInShoesRoom();
 
+        /** The employee won't be available while serving this returner. */
+        isEmployeeFree = true;
+
         /**
          * Notify a returner if there is at least one waiting.
          *
@@ -196,7 +209,7 @@ public class ShoesRoom extends GroupSynchronizer {
          * ({@code returnerMonitor}) so the only type of Client we can wake up here are
          * Borrowers.
          */
-        if(numReturners > 0) {
+        if(numReturnersWaiting > 0) {
             returnerMonitor.wakeOneReturnerUp();
         } else if(isShoePairAvailable()){
             /**
@@ -210,10 +223,33 @@ public class ShoesRoom extends GroupSynchronizer {
 
     /**
      * Clients return their shoes here. Their ShoePair gets added to {@code availableShoes}.
-     * Not synchronized since instance variables are not touched here.
+     * Is {@code synchronized} because shared instance variables are touched here.
      */
     private synchronized void returnShoes(Client client) {
         System.out.println("---Client(" + client.getId() + ") returns his shoes now. He's done for today and goes home.");
+
+        /**
+         * An if() is enough here since only one returner is woken up. For him it is guaranteed that
+         * the employee is free since he got woken up upon the event meaning that the employee is free now.
+         * Since the woken-up returner enjoys priority over every other thread, he doesn't have to recheck
+         * the condition.
+         */
+        if(!isEmployeeFree) {
+            /**
+             * Alternative place of incrementing {@code numReturnersWaiting}. Not used because of
+             * the reason explained above in {@link ShoesRoom#requestReturningShoes(Client)}.
+             */
+            //numReturnersWaiting++;
+
+            /** Let the returner wait on the helper monitor {@code returnerMonitor}. */
+            returnerMonitor.enqueueReturner(client);
+        }
+
+        /** It's the returners turn so the waiting number of returned decreased by 1. */
+        numReturnersWaiting--;
+
+        /** The employee won't be available while serving this returner. */
+        isEmployeeFree = false;
 
         /** Client returns ShoePair which are added to {@code availableShoes} again. */
         availableShoes.add(client.returnShoes());
@@ -222,15 +258,20 @@ public class ShoesRoom extends GroupSynchronizer {
         /** Returning shoes takes some time... */
         client.waitInShoesRoom();
 
+        /** Returner is served thus the employee is available again. */
+        isEmployeeFree = true;
+
         /**
-         * We decrement {@code numReturners} because this returner is done now. He only
-         * might inform others now that he's finished. If there is a returner waiting, we
-         * wake him up. If not we wake up a Borrower (realizes priority for returners over
+         * If there is at least one more returner waiting, we wake 1 returner up.
+         * If not, we wake up a borrower (realizes priority for returners over
          * borrowers).
+         *
+         * We could count the number of waiting borrowers in a variable like numBorrowersWaiting
+         * to check if we really need to run the {@code notifyAll()}. This is analogous to the
+         * implementation of {@code numReturnersWaiting} and thus considered trivial ;)
          */
-        numReturners--;
-        if(numReturners > 0) {
-            System.out.println("---Client(" + client.getId() + ") finished returning shoes. However there are " + numReturners + " returners waiting. We notify one returner.");
+        if(numReturnersWaiting > 0) {
+            System.out.println("---Client(" + client.getId() + ") finished returning shoes. However there are another " + numReturnersWaiting + " returner(s) waiting. We notify one returner.");
             returnerMonitor.wakeOneReturnerUp();
         } else {
             /**
@@ -244,7 +285,7 @@ public class ShoesRoom extends GroupSynchronizer {
              * --------------------------------------
              * Use {@code notifyAll()}. With this additional requirement, we have to look through
              * all waiting borrowers to determine which one we allow to borrow shoes (done at
-             * the beginning of this method).
+             * the beginning of this method by checking {@code servedBorrowerGroups).
              */
             notifyAll();
         }
